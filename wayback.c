@@ -716,24 +716,24 @@ static void server_new_xdg_popup(struct wl_listener *listener, void *data) {
 	wl_signal_add(&xdg_popup->events.destroy, &popup->destroy);
 }
 
+__attribute__((noreturn)) static void usage(void) {
+	printf("usage: wayback [:display] -- <session launcher>\n");
+	exit(EXIT_SUCCESS);
+}
+
 int main(int argc, char *argv[]) {
 	wlr_log_init(WLR_DEBUG, NULL);
 	char *startup_cmd = NULL;
+	const char *x_display = ":0";
 
-	int c;
-	while ((c = getopt(argc, argv, "s:h")) != -1) {
-		switch (c) {
-		case 's':
-			startup_cmd = optarg;
-			break;
-		default:
-			printf("Usage: %s [-s startup command]\n", argv[0]);
-			return 0;
-		}
-	}
-	if (optind < argc) {
-		printf("Usage: %s [-s startup command]\n", argv[0]);
-		return 0;
+	if (argc < 3)
+		usage();
+
+	if (argc == 4) {
+		startup_cmd = argv[3];
+		x_display = argv[1];
+	} else if (argc == 3) {
+		startup_cmd = argv[2];
 	}
 
 	struct tinywl_server server = {0};
@@ -887,11 +887,20 @@ int main(int argc, char *argv[]) {
          * start XWayland. */
 	if (fork() == 0) {
 		setenv("WAYLAND_DISPLAY", socket, true);
-		execlp("Xwayland", "Xwayland", ":1", "-fullscreen", "-retro", "-geometry", "1280x720", (void *)NULL);
+		execlp("Xwayland", "Xwayland", x_display, "-fullscreen", "-retro", "-geometry", "1280x720", (void *)NULL);
 	}
 
-	if (startup_cmd) {
+	/* Now start the session */
+	if (fork() == 0) {
+		/* XXX: we sleep for a little while to allow Xwayland to come up.
+		 * there is definitely a better solution here. */
+		usleep(500000);
+
+		setenv("WAYLAND_DISPLAY", "", true);
+		setenv("DISPLAY", x_display, true);
+		execlp(startup_cmd, startup_cmd, (void *) NULL);
 	}
+
 	/* Run the Wayland event loop. This does not return until you exit the
 	 * compositor. Starting the backend rigged up all of the necessary event
 	 * loop configuration to listen to libinput events, DRM events, generate
