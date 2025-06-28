@@ -12,3 +12,22 @@ of work needs to be done first.
 Wayback is an experimental state: expect breaking changes, and lots of
 bugs.  Please submit pull requests fixing bugs instead of bug reports
 if you are able.
+
+## Installation
+Dependencies:
+- wayland (wayland-server, wayland-client, wayland-cursor, wayland-egl)
+- wayland-protocol >=1.14
+- xkbcommon
+- wlroots-0.19
+
+Building:
+```
+meson setup _build
+cd _build
+meson compile
+```
+
+Installing:
+```
+meson install
+```
