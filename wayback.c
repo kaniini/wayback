@@ -27,6 +27,7 @@
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_seat.h>
 #include <wlr/types/wlr_subcompositor.h>
+#include <wlr/types/wlr_viewporter.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/log.h>
@@ -45,6 +46,8 @@ struct tinywl_server {
 	struct wl_listener new_xdg_toplevel;
 	struct wl_listener new_xdg_popup;
 	struct wl_list toplevels;
+
+	struct wlr_viewporter *viewporter;
 
 	struct wlr_cursor *cursor;
 	struct wlr_xcursor_manager *cursor_mgr;
@@ -811,6 +814,8 @@ int main(int argc, char *argv[]) {
 	server.new_xdg_popup.notify = server_new_xdg_popup;
 	wl_signal_add(&server.xdg_shell->events.new_popup, &server.new_xdg_popup);
 
+	server.viewporter = wlr_viewporter_create(server.wl_display);
+
 	/*
 	 * Creates a cursor, which is a wlroots utility for tracking the cursor
 	 * image shown on screen.
@@ -882,7 +887,7 @@ int main(int argc, char *argv[]) {
          * start XWayland. */
 	if (fork() == 0) {
 		setenv("WAYLAND_DISPLAY", socket, true);
-		execlp("Xwayland", "Xwayland", ":1", "-fullscreen", "-retro", (void *)NULL);
+		execlp("Xwayland", "Xwayland", ":1", "-fullscreen", "-retro", "-geometry", "1280x720", (void *)NULL);
 	}
 
 	if (startup_cmd) {

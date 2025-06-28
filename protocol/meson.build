@@ -15,10 +15,12 @@ endif
 
 protocols = [
 	[wl_protocol_dir, 'stable/xdg-shell/xdg-shell.xml'],
+	[wl_protocol_dir, 'stable/viewporter/viewporter.xml'],
 ]
 
 client_protocols = [
 	[wl_protocol_dir, 'stable/xdg-shell/xdg-shell.xml'],
+	[wl_protocol_dir, 'stable/viewporter/viewporter.xml'],
 ]
 
 wl_protos_src = []
