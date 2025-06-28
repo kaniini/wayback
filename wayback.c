@@ -70,6 +70,8 @@ struct tinywl_server {
 	struct wlr_output_layout *output_layout;
 	struct wl_list outputs;
 	struct wl_listener new_output;
+
+	int width, height;
 };
 
 struct tinywl_output {
@@ -521,6 +523,13 @@ static void server_new_output(struct wl_listener *listener, void *data) {
 		wlr_output);
 	struct wlr_scene_output *scene_output = wlr_scene_output_create(server->scene, wlr_output);
 	wlr_scene_output_layout_add_output(server->scene_layout, l_output, scene_output);
+
+	int width, height;
+	wlr_output_effective_resolution(wlr_output, &width, &height);
+
+	/* XXX: this is definitely wrong, but whatever, it's good enough for now */
+	server->width += width;
+	server->height += height;
 }
 
 static void focus_toplevel(struct tinywl_toplevel *toplevel) {
@@ -814,6 +823,7 @@ int main(int argc, char *argv[]) {
 	server.new_xdg_popup.notify = server_new_xdg_popup;
 	wl_signal_add(&server.xdg_shell->events.new_popup, &server.new_xdg_popup);
 
+	/* Set up viewporter protocol */
 	server.viewporter = wlr_viewporter_create(server.wl_display);
 
 	/*
@@ -886,8 +896,11 @@ int main(int argc, char *argv[]) {
 	/* Set the WAYLAND_DISPLAY environment variable to our socket for XWayland and then
          * start XWayland. */
 	if (fork() == 0) {
+		char geometry[4096];
+		snprintf(geometry, sizeof geometry, "%dx%d", server.width, server.height);
+
 		setenv("WAYLAND_DISPLAY", socket, true);
-		execlp("Xwayland", "Xwayland", x_display, "-fullscreen", "-retro", "-geometry", "1280x720", (void *)NULL);
+		execlp("Xwayland", "Xwayland", x_display, "-fullscreen", "-retro", "-geometry", geometry, (void *)NULL);
 	}
 
 	/* Now start the session */
