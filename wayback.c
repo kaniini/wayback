@@ -2,7 +2,7 @@
  * Wayback is essentially the tinywl compositor included in wlroots
  * but stripped down to only support an X session.
  *
- * It is licensed under CC0, which places it in the public domain.
+ * SPDX-License-Identifier: MIT
  */
 
 #include <assert.h>
