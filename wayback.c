@@ -923,6 +923,7 @@ int main(int argc, char *argv[]) {
 		usleep(500000);
 
 		setenv("WAYLAND_DISPLAY", "", true);
+                setenv("XDG_SESSION_TYPE", "x11", true);
 		setenv("DISPLAY", x_display, true);
 		execvp(startup_cmd[0], startup_cmd);
 	}
