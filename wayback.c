@@ -726,24 +726,37 @@ static void server_new_xdg_popup(struct wl_listener *listener, void *data) {
 }
 
 __attribute__((noreturn)) static void usage(void) {
-	printf("usage: wayback [:display] -- <session launcher>\n");
+	printf("usage: wayback [-d :display] -- <session launcher>\n");
 	exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char *argv[]) {
 	wlr_log_init(WLR_DEBUG, NULL);
-	char *startup_cmd = NULL;
+	char **startup_cmd = NULL;
 	const char *x_display = ":0";
+	int opt;
 
-	if (argc < 3)
-		usage();
+	static struct option long_options[] = {
+		{"display", required_argument, 0, 'd'},
+		{0, 0, 0, 0}
+	};
 
-	if (argc == 4) {
-		startup_cmd = argv[3];
-		x_display = argv[1];
-	} else if (argc == 3) {
-		startup_cmd = argv[2];
+	int option_index = 0;
+	while ((opt = getopt_long(argc, argv, "d:", long_options, &option_index)) != -1) {
+		switch (opt) {
+			case 'd':
+				x_display = optarg;
+				break;
+			default:
+				usage();
+		}
 	}
+
+	if (optind >= argc) {
+		usage();
+	}
+
+	startup_cmd = &argv[optind];
 
 	struct tinywl_server server = {0};
 	/* The Wayland display is managed by libwayland. It handles accepting
@@ -911,7 +924,7 @@ int main(int argc, char *argv[]) {
 
 		setenv("WAYLAND_DISPLAY", "", true);
 		setenv("DISPLAY", x_display, true);
-		execlp(startup_cmd, startup_cmd, (void *) NULL);
+		execvp(startup_cmd[0], startup_cmd);
 	}
 
 	/* Run the Wayland event loop. This does not return until you exit the
