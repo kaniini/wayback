@@ -1,5 +1,6 @@
 project('wayback', 'c',
   version: '0.1',
+  license: 'MIT',
   meson_version: '>= 0.50')
 
 add_project_arguments('-DWLR_USE_UNSTABLE', language: 'c')
