@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/wait.h>
 #include <wayland-server-core.h>
 #include <wlr/backend.h>
 #include <wlr/render/allocator.h>
@@ -112,6 +113,11 @@ struct tinywl_keyboard {
 	struct wl_listener modifiers;
 	struct wl_listener key;
 	struct wl_listener destroy;
+};
+
+struct wayback_session_monitor_data {
+	pid_t	session_pid;
+	struct 	tinywl_server *server;
 };
 
 static void keyboard_handle_modifiers(
@@ -725,6 +731,25 @@ static void server_new_xdg_popup(struct wl_listener *listener, void *data) {
 	wl_signal_add(&xdg_popup->events.destroy, &popup->destroy);
 }
 
+static int sigchld_handler(int signal, void *data) {
+	int status;
+	struct wayback_session_monitor_data *monitor_data = (struct wayback_session_monitor_data*) data;
+	struct tinywl_server *server = monitor_data->server;
+	pid_t pid;
+	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+		if (pid == monitor_data->session_pid) {
+			if (WIFEXITED(status)) {
+				wlr_log(WLR_INFO, "Session exited with status %d", WEXITSTATUS(status));
+				wl_display_terminate(server->wl_display);
+			} else if (WIFSIGNALED(status)) {
+				wlr_log(WLR_INFO, "Session killed by signal %d", WTERMSIG(status));
+				wl_display_terminate(server->wl_display);
+			}
+		}
+	}
+	return 0;
+}
+
 __attribute__((noreturn)) static void usage(void) {
 	printf("usage: wayback [-d :display] -- <session launcher>\n");
 	exit(EXIT_SUCCESS);
@@ -907,7 +932,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* Set the WAYLAND_DISPLAY environment variable to our socket for XWayland and then
-         * start XWayland. */
+	 * start XWayland. */
 	if (fork() == 0) {
 		char geometry[4096];
 		snprintf(geometry, sizeof geometry, "%dx%d", server.width, server.height);
@@ -917,7 +942,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* Now start the session */
-	if (fork() == 0) {
+	pid_t session_pid = fork();
+	if (session_pid == 0) {
 		/* XXX: we sleep for a little while to allow Xwayland to come up.
 		 * there is definitely a better solution here. */
 		usleep(500000);
@@ -928,6 +954,10 @@ int main(int argc, char *argv[]) {
 		execvp(startup_cmd[0], startup_cmd);
 	}
 
+	struct wayback_session_monitor_data loop_data = {session_pid, &server};
+	struct wl_event_loop *event_loop = wl_display_get_event_loop(server.wl_display);
+	wl_event_loop_add_signal(event_loop, SIGCHLD, sigchld_handler, &loop_data);
+
 	/* Run the Wayland event loop. This does not return until you exit the
 	 * compositor. Starting the backend rigged up all of the necessary event
 	 * loop configuration to listen to libinput events, DRM events, generate
@@ -935,7 +965,6 @@ int main(int argc, char *argv[]) {
 	wlr_log(WLR_INFO, "Running Wayland compositor on WAYLAND_DISPLAY=%s",
 			socket);
 	wl_display_run(server.wl_display);
-
 
 	/* Once wl_display_run returns, we destroy all clients then shut down the
 	 * server. */
