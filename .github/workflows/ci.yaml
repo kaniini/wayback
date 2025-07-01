@@ -1,0 +1,51 @@
+name: Meson CI
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    name: Build (${{ matrix.distro }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - distro: "alpine"
+            container: "docker.io/alpine:edge"
+          - distro: "arch"
+            container: "ghcr.io/archlinux/archlinux:base-devel"
+    container:
+      image: ${{ matrix.container }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        if: matrix.distro == 'alpine'
+        run: |
+          apk update
+          apk upgrade
+          apk add \
+            libc-dev \
+            libxkbcommon-dev \
+            gcc \
+            meson \
+            wayland-dev \
+            wayland-protocols \
+            wlroots-dev
+      - name: Install dependencies
+        if: matrix.distro == 'arch'
+        run: |
+          sudo pacman -Syu --needed --noconfirm \
+            libxkbcommon \
+            meson \
+            wayland \
+            wayland-protocols \
+            wlroots0.19
+      - name: Set up problem matcher
+        uses: misyltoad/gcc-problem-matcher@master
+      - name: Configure project
+        run: meson setup --fatal-meson-warnings builddir/
+        env:
+          CC: gcc
+      - name: Build project
+        run: meson compile -C builddir/ -v
