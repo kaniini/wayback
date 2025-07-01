@@ -115,11 +115,6 @@ struct tinywl_keyboard {
 	struct wl_listener destroy;
 };
 
-struct wayback_session_monitor_data {
-	pid_t	session_pid;
-	struct 	tinywl_server *server;
-};
-
 static void keyboard_handle_modifiers(
 		struct wl_listener *listener, void *data) {
 	/* This event is raised when a modifier key, such as shift or alt, is
@@ -731,57 +726,8 @@ static void server_new_xdg_popup(struct wl_listener *listener, void *data) {
 	wl_signal_add(&xdg_popup->events.destroy, &popup->destroy);
 }
 
-static int sigchld_handler(int signal, void *data) {
-	int status;
-	struct wayback_session_monitor_data *monitor_data = (struct wayback_session_monitor_data*) data;
-	struct tinywl_server *server = monitor_data->server;
-	pid_t pid;
-	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-		if (pid == monitor_data->session_pid) {
-			if (WIFEXITED(status)) {
-				wlr_log(WLR_INFO, "Session exited with status %d", WEXITSTATUS(status));
-				wl_display_terminate(server->wl_display);
-			} else if (WIFSIGNALED(status)) {
-				wlr_log(WLR_INFO, "Session killed by signal %d", WTERMSIG(status));
-				wl_display_terminate(server->wl_display);
-			}
-		}
-	}
-	return 0;
-}
-
-__attribute__((noreturn)) static void usage(void) {
-	printf("usage: wayback [-d :display] -- <session launcher>\n");
-	exit(EXIT_SUCCESS);
-}
-
 int main(int argc, char *argv[]) {
 	wlr_log_init(WLR_DEBUG, NULL);
-	char **startup_cmd = NULL;
-	const char *x_display = ":0";
-	int opt;
-
-	static struct option long_options[] = {
-		{"display", required_argument, 0, 'd'},
-		{0, 0, 0, 0}
-	};
-
-	int option_index = 0;
-	while ((opt = getopt_long(argc, argv, "d:", long_options, &option_index)) != -1) {
-		switch (opt) {
-			case 'd':
-				x_display = optarg;
-				break;
-			default:
-				usage();
-		}
-	}
-
-	if (optind >= argc) {
-		usage();
-	}
-
-	startup_cmd = &argv[optind];
 
 	struct tinywl_server server = {0};
 	/* The Wayland display is managed by libwayland. It handles accepting
@@ -930,33 +876,6 @@ int main(int argc, char *argv[]) {
 		wl_display_destroy(server.wl_display);
 		return 1;
 	}
-
-	/* Set the WAYLAND_DISPLAY environment variable to our socket for XWayland and then
-	 * start XWayland. */
-	if (fork() == 0) {
-		char geometry[4096];
-		snprintf(geometry, sizeof geometry, "%dx%d", server.width, server.height);
-
-		setenv("WAYLAND_DISPLAY", socket, true);
-		execlp("Xwayland", "Xwayland", x_display, "-fullscreen", "-retro", "-geometry", geometry, (void *)NULL);
-	}
-
-	/* Now start the session */
-	pid_t session_pid = fork();
-	if (session_pid == 0) {
-		/* XXX: we sleep for a little while to allow Xwayland to come up.
-		 * there is definitely a better solution here. */
-		usleep(500000);
-
-		setenv("WAYLAND_DISPLAY", "", true);
-                setenv("XDG_SESSION_TYPE", "x11", true);
-		setenv("DISPLAY", x_display, true);
-		execvp(startup_cmd[0], startup_cmd);
-	}
-
-	struct wayback_session_monitor_data loop_data = {session_pid, &server};
-	struct wl_event_loop *event_loop = wl_display_get_event_loop(server.wl_display);
-	wl_event_loop_add_signal(event_loop, SIGCHLD, sigchld_handler, &loop_data);
 
 	/* Run the Wayland event loop. This does not return until you exit the
 	 * compositor. Starting the backend rigged up all of the necessary event
