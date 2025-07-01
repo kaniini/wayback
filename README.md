@@ -14,6 +14,7 @@ bugs.  Please submit pull requests fixing bugs instead of bug reports
 if you are able.
 
 ## Installation
+
 Dependencies:
 - wayland (wayland-server, wayland-client, wayland-cursor, wayland-egl)
 - wayland-protocol >=1.14
@@ -31,3 +32,7 @@ Installing:
 ```
 meson install
 ```
+
+## Discussion
+
+irc.libera.chat #wayback
