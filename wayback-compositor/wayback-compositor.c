@@ -31,8 +31,10 @@
 #include <wlr/types/wlr_viewporter.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/util/log.h>
 #include <xkbcommon/xkbcommon.h>
+#include <fcntl.h>
 
 /* For brevity's sake, struct members are annotated where they are used. */
 struct tinywl_server {
@@ -47,6 +49,8 @@ struct tinywl_server {
 	struct wl_listener new_xdg_toplevel;
 	struct wl_listener new_xdg_popup;
 	struct wl_list toplevels;
+
+	struct wlr_xdg_output_manager_v1 *xdg_output_manager_v1;
 
 	struct wlr_viewporter *viewporter;
 
@@ -726,8 +730,22 @@ static void server_new_xdg_popup(struct wl_listener *listener, void *data) {
 	wl_signal_add(&xdg_popup->events.destroy, &popup->destroy);
 }
 
+int set_cloexec(int fd) {
+	int flags = fcntl(fd, F_GETFD);
+	if (flags == -1) return -1;
+	return fcntl(fd, F_SETFD, flags | FD_CLOEXEC);
+}
+
 int main(int argc, char *argv[]) {
 	wlr_log_init(WLR_DEBUG, NULL);
+
+	if (argc < 3) {
+		fprintf(stderr, "Usage: %s <socket xwayback> <socket xwayland>\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	int xwayback_session_socket = atoi(argv[1]);
+	int xwayland_session_socket = atoi(argv[2]);
 
 	struct tinywl_server server = {0};
 	/* The Wayland display is managed by libwayland. It handles accepting
@@ -810,6 +828,9 @@ int main(int argc, char *argv[]) {
 	/* Set up viewporter protocol */
 	server.viewporter = wlr_viewporter_create(server.wl_display);
 
+	/* Set up xdg-output protocol */
+	server.xdg_output_manager_v1 = wlr_xdg_output_manager_v1_create(server.wl_display, server.output_layout);
+
 	/*
 	 * Creates a cursor, which is a wlroots utility for tracking the cursor
 	 * image shown on screen.
@@ -863,10 +884,16 @@ int main(int argc, char *argv[]) {
 			&server.request_set_selection);
 
 	/* Add a Unix socket to the Wayland display. */
-	const char *socket = wl_display_add_socket_auto(server.wl_display);
-	if (!socket) {
-		wlr_backend_destroy(server.backend);
-		return 1;
+	set_cloexec(xwayback_session_socket);
+	if (!wl_client_create(server.wl_display, xwayback_session_socket)) {
+		wlr_log(WLR_ERROR, "Failed to connect to xwayback client");
+		exit(EXIT_FAILURE);
+	}
+
+	set_cloexec(xwayback_session_socket);
+	if (!wl_client_create(server.wl_display, xwayland_session_socket)) {
+		wlr_log(WLR_ERROR, "Failed to connect to xwayland client");
+		exit(EXIT_FAILURE);
 	}
 
 	/* Start the backend. This will enumerate outputs and inputs, become the DRM
@@ -881,8 +908,6 @@ int main(int argc, char *argv[]) {
 	 * compositor. Starting the backend rigged up all of the necessary event
 	 * loop configuration to listen to libinput events, DRM events, generate
 	 * frame events at the refresh rate, and so on. */
-	wlr_log(WLR_INFO, "Running Wayland compositor on WAYLAND_DISPLAY=%s",
-			socket);
 	wl_display_run(server.wl_display);
 
 	/* Once wl_display_run returns, we destroy all clients then shut down the
