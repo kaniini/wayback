@@ -196,6 +196,7 @@ int main(int argc, char* argv[]) {
 	int socket_xwayland[2];
 	char buffer[BUFSIZ];
 	const char *x_display = ":0";
+	char *displayfd = NULL;
 	int opt;
 
 	signal(SIGCHLD, handle_exit);
@@ -203,18 +204,29 @@ int main(int argc, char* argv[]) {
 	// TODO: Implement all options from Xserver(1) and Xorg(1)
 	static struct option long_options[] = {
 		{"display", required_argument, 0, 'd'},
+		{"displayfd", required_argument, 0, 'f'},
 		{0, 0, 0, 0}
 	};
 
 	int option_index = 0;
-	while ((opt = getopt_long(argc, argv, "d:", long_options, &option_index)) != -1) {
+	while ((opt = getopt_long(argc, argv, "d:f:", long_options, &option_index)) != -1) {
 		switch (opt) {
 			case 'd':
 				x_display = optarg;
 				break;
+			case 'f':
+				displayfd = optarg;
+				break;
 			default:
 				usage(argv[0]);
 		}
+	}
+
+	// displayfd takes priority
+	// TODO: Check if this is also the case in Xserver(7)
+	if (displayfd != NULL) {
+		printf("Xwayback: using displayfd\n");
+		x_display = NULL;
 	}
 
 	if (socketpair(AF_UNIX, SOCK_STREAM, 0, socket_xwayback) == -1) {
@@ -250,7 +262,8 @@ int main(int argc, char* argv[]) {
 	setenv("WAYLAND_SOCKET", way_display, true);
 
 	xwayback->wayland_socket = strdup(buffer);
-	xwayback->X_display = strdup(x_display);
+	if (x_display)
+		xwayback->X_display = strdup(x_display);
 
 	xwayback->display = wl_display_connect(NULL);
 	if (!xwayback->display) {
@@ -274,8 +287,12 @@ int main(int argc, char* argv[]) {
 		char geometry[4096];
 		snprintf(geometry, sizeof(geometry), "%dx%d", xwayback->first_output->width, xwayback->first_output->height);
 
-		execlp("Xwayland", "Xwayland", x_display, "-fullscreen", "-retro", "-geometry", geometry, (void*)NULL);
-		fprintf(stderr, "ERROR: failed to launch wayback-compositor\n");
+		if (x_display)
+			execlp("Xwayland", "Xwayland", x_display, "-fullscreen", "-retro", "-geometry", geometry, (void*)NULL);
+		else {
+			execlp("Xwayland", "Xwayland", "-displayfd", displayfd, "-fullscreen", "-retro", "-geometry", geometry, (void*)NULL);
+		}
+		fprintf(stderr, "ERROR: failed to launch Xwayland\n");
 		exit(EXIT_FAILURE);
 	}
 
