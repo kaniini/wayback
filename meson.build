@@ -14,10 +14,6 @@ xkbcommon      = dependency('xkbcommon')
 wlroots        = dependency('wlroots-0.19')
 
 subdir('protocol')
-
-executable(
-	'wayback',
-	['wayback.c'],
-	dependencies: [wayland_server, wayland_client, wayland_cursor, wayland_egl, wayland_protos, wlroots, xkbcommon, server_protos],
-	install: true,
-)
+subdir('wayback-compositor')
+subdir('wayback-session')
+subdir('xwayback')

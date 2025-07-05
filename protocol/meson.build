@@ -21,6 +21,7 @@ protocols = [
 client_protocols = [
 	[wl_protocol_dir, 'stable/xdg-shell/xdg-shell.xml'],
 	[wl_protocol_dir, 'stable/viewporter/viewporter.xml'],
+	[wl_protocol_dir, 'unstable/xdg-output/xdg-output-unstable-v1.xml'],
 ]
 
 wl_protos_src = []
@@ -45,6 +46,12 @@ endforeach
 
 foreach p : client_protocols
 	xml = join_paths(p)
+	wl_protos_src += custom_target(
+		xml.underscorify() + '_client_c',
+		input: xml,
+		output: '@BASENAME@-client-protocol.c',
+		command: [wayland_scanner, 'private-code', '@INPUT@', '@OUTPUT@'],
+	)
 	wl_protos_headers += custom_target(
 		xml.underscorify() + '_client_h',
 		input: xml,
