@@ -20,20 +20,20 @@ pid_t xwayback_pid;
 pid_t session_pid;
 
 char *get_xinitrc_path() {
-	char *home_dir = getenv("HOME");
-	char *xinitrc_path = malloc(strlen(home_dir)+strlen("/.xinitrc")+1);
-	snprintf(xinitrc_path, strlen(home_dir)+strlen("/.xinitrc")+1, "%s/.xinitrc", home_dir);
-	if (access(xinitrc_path, F_OK) == 0) {
-		return xinitrc_path;
+	char *home = getenv("HOME");
+	if (home) {
+		char *xinitrc;
+		if (asprintf(&xinitrc, "%s/.xinitrc", home) == -1) {
+			fprintf(stderr, "ERROR: Unable to get xinitrc\n");
+			exit(EXIT_FAILURE);
+		}
+		if (access(xinitrc, F_OK|R_OK) == 0)
+			return xinitrc;
+		free(xinitrc);
 	}
 
-	free(xinitrc_path);
-	xinitrc_path = strdup("/etc/X11/xinit/xinitrc");
-	if (access(xinitrc_path, F_OK) == 0) {
-		return xinitrc_path;
-	}
-
-	free(xinitrc_path);
+	if (access("/etc/X11/xinit/xinitrc", F_OK|R_OK) == 0)
+		return strdup("/etc/X11/xinit/xinitrc");
 	fprintf(stderr, "ERROR: Unable to find xinitrc file.\n");
 	exit(EXIT_FAILURE);
 }
