@@ -1,0 +1,26 @@
+Xwayback(1)
+
+# NAME
+
+Xwayback - experimental X11 compatibility layer
+
+# SYNOPSIS
+
+*Xwayback* _args_
+
+# DESCRIPTION
+
+*Xwayback* is a stub X server that uses a wayland compositor to launch Xwayland.
+
+# OPTIONS
+
+    *-d*, *--display* _<display>_
+        Launch Xwayback on the specified display number
+
+# LICENSE
+
+MIT
+
+# SEE ALSO
+
+*wayback-session*(1), *Xserver(1)*, *Xorg(1)*
