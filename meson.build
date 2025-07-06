@@ -1,7 +1,7 @@
 project('wayback', 'c',
   version: '0.1',
   license: 'MIT',
-  meson_version: '>= 0.50')
+  meson_version: '>= 0.55')
 
 add_project_arguments('-DWLR_USE_UNSTABLE', language: 'c')
 
@@ -17,3 +17,4 @@ subdir('protocol')
 subdir('wayback-compositor')
 subdir('wayback-session')
 subdir('xwayback')
+subdir('doc')

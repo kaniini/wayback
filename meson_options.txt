@@ -1,0 +1,1 @@
+option('generate_manpages', type : 'feature', value : 'enabled', description : 'Generate and install man pages')
