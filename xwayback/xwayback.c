@@ -249,6 +249,10 @@ int main(int argc, char* argv[]) {
 
 	comp_pid = fork();
 	if (comp_pid == 0) {
+		char *wayback_compositor_path = getenv("WAYBACK_COMPOSITOR_PATH");
+		if (wayback_compositor_path == NULL)
+			wayback_compositor_path = strdup(WAYBACK_COMPOSITOR_EXEC_PATH);
+
 		char fd_xwayback[64];
 		char fd_xwayland[64];
 		snprintf(fd_xwayback, sizeof(fd_xwayback), "%d", socket_xwayback[0]);
@@ -257,7 +261,7 @@ int main(int argc, char* argv[]) {
 		printf("Passed descriptor xback: %s; xway: %s\n", fd_xwayback, fd_xwayland);
 		close(socket_xwayback[1]);
 		close(socket_xwayland[1]);
-		execlp("wayback-compositor", "wayback-compositor", fd_xwayback, fd_xwayland, (void *)NULL);
+		execlp(wayback_compositor_path, wayback_compositor_path, fd_xwayback, fd_xwayland, (void *)NULL);
 		fprintf(stderr, "ERROR: failed to launch wayback-compositor\n");
 		exit(EXIT_FAILURE);
 	}

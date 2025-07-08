@@ -1,4 +1,3 @@
-
 executable(
 	'Xwayback',
 	['xwayback.c'],
