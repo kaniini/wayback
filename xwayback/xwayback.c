@@ -187,6 +187,12 @@ void handle_exit(int sig) {
 	}
 }
 
+static const char *basename_c(const char *path)
+{
+	const char *slash = strrchr(path, '/');
+	return slash ? ++slash : path;
+}
+
 __attribute__((noreturn)) static void usage(char *binname) {
 	fprintf(stderr, "usage: %s [-d :display]\n", binname);
 	exit(EXIT_SUCCESS);
@@ -290,9 +296,9 @@ int main(int argc, char* argv[]) {
 		snprintf(geometry, sizeof(geometry), "%dx%d", xwayback->first_output->width, xwayback->first_output->height);
 
 		if (x_display)
-			execlp("Xwayland", "Xwayland", x_display, "-fullscreen", "-retro", "-geometry", geometry, (void*)NULL);
+			execl(XWAYLAND_EXEC_PATH, basename_c(XWAYLAND_EXEC_PATH), x_display, "-fullscreen", "-retro", "-geometry", geometry, (void*)NULL);
 		else {
-			execlp("Xwayland", "Xwayland", "-displayfd", displayfd, "-fullscreen", "-retro", "-geometry", geometry, (void*)NULL);
+			execl(XWAYLAND_EXEC_PATH, basename_c(XWAYLAND_EXEC_PATH), "-displayfd", displayfd, "-fullscreen", "-retro", "-geometry", geometry, (void*)NULL);
 		}
 		fprintf(stderr, "ERROR: failed to launch Xwayland\n");
 		exit(EXIT_FAILURE);

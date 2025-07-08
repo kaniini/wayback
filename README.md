@@ -20,6 +20,7 @@ Dependencies:
 - wayland-protocol >=1.14
 - xkbcommon
 - wlroots-0.19
+- xwayland >= 24.1
 
 Building:
 ```
