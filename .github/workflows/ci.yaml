@@ -34,6 +34,7 @@ jobs:
             wayland-dev \
             wayland-protocols \
             wlroots-dev \
+            xwayland-dev \
             scdoc
       - name: Install dependencies
         if: matrix.distro == 'arch'
@@ -44,6 +45,7 @@ jobs:
             wayland \
             wayland-protocols \
             wlroots0.19 \
+            xorg-xwayland \
             scdoc
       - name: Install dependencies
         if: matrix.distro == 'fedora'
@@ -58,7 +60,8 @@ jobs:
             'pkgconfig(wayland-protocols)' \
             'pkgconfig(wayland-server)' \
             'pkgconfig(wlroots-0.19)' \
-            'pkgconfig(xkbcommon)'
+            'pkgconfig(xkbcommon)' \
+            'pkgconfig(xwayland)'
       - name: Set up problem matcher
         uses: misyltoad/gcc-problem-matcher@master
       - name: Configure project
