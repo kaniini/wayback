@@ -17,6 +17,11 @@ Xwayback - experimental X11 compatibility layer
     *-d*, *--display* _<display>_
         Launch Xwayback on the specified display number
 
+# ENVVARS
+
+    *WAYBACK_COMPOSITOR_PATH*
+        Path to wayback-compositor
+
 # LICENSE
 
 MIT
