@@ -54,6 +54,7 @@ struct xway_output {
 
 pid_t comp_pid;
 pid_t xway_pid;
+pid_t xsession_pid;
 
 static void output_geometry(void *data, struct wl_output *wl_output, int32_t x,
 		int32_t y, int32_t width_mm, int32_t height_mm, int32_t subpixel,
@@ -178,17 +179,19 @@ static const struct wl_registry_listener registry_listener = {
 
 void handle_exit(int sig) {
 	pid_t pid = waitpid(-1, NULL, WNOHANG);
-	if (pid == comp_pid|| pid == xway_pid) {
-		if (pid == comp_pid && xway_pid > 0)
+	if (pid == comp_pid || pid == xway_pid || pid == xsession_pid) {
+		if (pid != xway_pid && xway_pid > 0)
 			kill(xway_pid, SIGKILL);
-		if (pid == xway_pid && comp_pid > 0)
+		if (pid != comp_pid && comp_pid > 0)
 			kill(comp_pid, SIGKILL);
+		if (pid != xsession_pid && xsession_pid > 0)
+			kill(xsession_pid, SIGTERM);
 		exit(EXIT_SUCCESS);
 	}
 }
 
 __attribute__((noreturn)) static void usage(char *binname) {
-	fprintf(stderr, "usage: %s [-d :display]\n", binname);
+	fprintf(stderr, "usage: %s [-d :display] [xsession args...]\n", binname);
 	exit(EXIT_SUCCESS);
 }
 
@@ -296,6 +299,21 @@ int main(int argc, char* argv[]) {
 		}
 		fprintf(stderr, "ERROR: failed to launch Xwayland\n");
 		exit(EXIT_FAILURE);
+	}
+
+	if (optind < argc) {
+		// FIXME: how can you tell when the X server is done launching?
+		// looping over trying to connect to it doesn't seem any better
+		usleep(1000000);
+
+		xsession_pid = fork();
+		if (xsession_pid == 0) {
+			setenv("DISPLAY", x_display, true);
+
+			execvp(argv[optind], &argv[optind]);
+			fprintf(stderr, "ERROR: failed to launch xsession\n");
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	while (1)
