@@ -14,6 +14,8 @@ jobs:
             container: "docker.io/alpine:edge"
           - distro: "arch"
             container: "ghcr.io/archlinux/archlinux:base-devel"
+          - distro: "fedora"
+            container: "quay.io/fedora/fedora:rawhide"
     container:
       image: ${{ matrix.container }}
     steps:
@@ -43,6 +45,20 @@ jobs:
             wayland-protocols \
             wlroots0.19 \
             scdoc
+      - name: Install dependencies
+        if: matrix.distro == 'fedora'
+        run: |
+          dnf --assumeyes install \
+            meson \
+            gcc \
+            'pkgconfig(scdoc)' \
+            'pkgconfig(wayland-client)' \
+            'pkgconfig(wayland-cursor)' \
+            'pkgconfig(wayland-egl)' \
+            'pkgconfig(wayland-protocols)' \
+            'pkgconfig(wayland-server)' \
+            'pkgconfig(wlroots-0.19)' \
+            'pkgconfig(xkbcommon)'
       - name: Set up problem matcher
         uses: misyltoad/gcc-problem-matcher@master
       - name: Configure project
