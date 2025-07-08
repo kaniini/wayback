@@ -91,7 +91,6 @@ int main(int argc, char* argv[]) {
 	session_pid = fork();
 	if (session_pid == 0) {
 		setenv("XDG_SESSION_TYPE", "x11", true);
-		setenv("WAYLAND_DISPLAY", "", true);
 		setenv("DISPLAY", x_display, true);
 		if (xinitrc_path != NULL) {
 			execlp("sh", "sh", xinitrc_path, (void*)NULL);
