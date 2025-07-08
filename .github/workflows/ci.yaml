@@ -31,7 +31,8 @@ jobs:
             meson \
             wayland-dev \
             wayland-protocols \
-            wlroots-dev
+            wlroots-dev \
+            scdoc
       - name: Install dependencies
         if: matrix.distro == 'arch'
         run: |
@@ -40,11 +41,12 @@ jobs:
             meson \
             wayland \
             wayland-protocols \
-            wlroots0.19
+            wlroots0.19 \
+            scdoc
       - name: Set up problem matcher
         uses: misyltoad/gcc-problem-matcher@master
       - name: Configure project
-        run: meson setup --fatal-meson-warnings builddir/
+        run: meson setup --fatal-meson-warnings builddir/ -Dgenerate_manpages=enabled
         env:
           CC: gcc
       - name: Build project

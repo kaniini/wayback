@@ -1,0 +1,28 @@
+wayback-session(1)
+
+# NAME
+
+wayback-session - session launcher for *Xwayback*(1)
+
+# SYNOPSIS
+
+*wayback-session* _session cmd_
+
+# DESCRIPTION
+
+*wayback-session* is a session launcher using *Xwayback*(1).
+Its behaviour is similiar to that of *startx*(1), and the same xinitrc files are used.
+
+# OPTIONS
+
+*wayback-session* optionally takes the command to launch a session.
+If no command is specified it will try to launch ~/.xinitrc.
+If ~/.xinitrc is not found, it will launch /etc/X11/xinit/xinitrc
+
+# LICENSE
+
+MIT
+
+# SEE ALSO
+
+*Xwayback*(1), *startx*(1), *Xserver(1)*, *Xorg(1)*

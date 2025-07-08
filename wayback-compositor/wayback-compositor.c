@@ -939,5 +939,6 @@ int main(int argc, char *argv[]) {
 	wlr_renderer_destroy(server.renderer);
 	wlr_backend_destroy(server.backend);
 	wl_display_destroy(server.wl_display);
+
 	return 0;
 }

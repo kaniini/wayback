@@ -1,9 +1,11 @@
 /*
- * wayback-session launches the wayback compositor, XWayback/XWayland
- * and the given session executable
+ * XWayback is a wrapper around wayback-compositor
+ * and XWayland, it launches both in succession and
+ * functions similiar to a traditional X server.
  *
  * SPDX-License-Identifier: MIT
  */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -298,5 +300,6 @@ int main(int argc, char* argv[]) {
 
 	while (1)
 		pause();
+
 	return 0;
 }
