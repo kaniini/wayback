@@ -106,5 +106,6 @@ int main(int argc, char* argv[]) {
 	while(1)
 		pause();
 	free(xinitrc_path);
+
 	return 0;
 }
