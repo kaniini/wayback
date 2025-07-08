@@ -12,9 +12,9 @@
 #include <string.h>
 #include <getopt.h>
 #include <unistd.h>
+#include <signal.h>
 #include <sys/wait.h>
 #include <sys/socket.h>
-#include <sys/signal.h>
 #include <sys/types.h>
 #include <wayland-client.h>
 #include "xdg-output-unstable-v1-client-protocol.h"

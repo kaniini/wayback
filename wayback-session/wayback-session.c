@@ -13,8 +13,8 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <ctype.h>
+#include <signal.h>
 #include <sys/wait.h>
-#include <sys/signal.h>
 
 pid_t xwayback_pid;
 pid_t session_pid;
