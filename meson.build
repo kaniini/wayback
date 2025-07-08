@@ -11,7 +11,11 @@ wayland_cursor = dependency('wayland-cursor')
 wayland_egl    = dependency('wayland-egl')
 wayland_protos = dependency('wayland-protocols', version: '>=1.14')
 xkbcommon      = dependency('xkbcommon')
-wlroots        = dependency('wlroots-0.19')
+wlroots        = dependency('wlroots-0.19', version: '>=0.19', required: false)
+
+if not wlroots.found()
+  wlroots = dependency('wlroots-0.18', version: '>=0.18')
+endif
 
 subdir('protocol')
 subdir('wayback-compositor')
