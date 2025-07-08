@@ -251,7 +251,7 @@ int main(int argc, char* argv[]) {
 		printf("Passed descriptor xback: %s; xway: %s\n", fd_xwayback, fd_xwayland);
 		close(socket_xwayback[1]);
 		close(socket_xwayland[1]);
-		execlp("wayback-compositor", "wayback-compositor", fd_xwayback, fd_xwayland, (void *)NULL);
+		execlp(WAYBACK_COMPOSITOR_EXEC_PATH, WAYBACK_COMPOSITOR_EXEC_PATH, fd_xwayback, fd_xwayland, (void *)NULL);
 		fprintf(stderr, "ERROR: failed to launch wayback-compositor\n");
 		exit(EXIT_FAILURE);
 	}

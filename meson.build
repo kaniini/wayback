@@ -5,6 +5,8 @@ project('wayback', 'c',
 
 add_project_arguments('-DWLR_USE_UNSTABLE', language: 'c')
 
+add_global_arguments('-DWAYBACK_COMPOSITOR_EXEC_PATH="@0@/@1@/wayback-compositor"'.format(get_option('prefix'), get_option('libexecdir')), language : 'c')
+
 wayland_server = dependency('wayland-server')
 wayland_client = dependency('wayland-client')
 wayland_cursor = dependency('wayland-cursor')
