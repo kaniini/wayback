@@ -33,6 +33,14 @@ Installing:
 meson install
 ```
 
+## Testing / Usage
+
+Run `Xwayback xterm` or `Xwayback startplasma-x11`. Exit with <key>Ctrl</key>+<key>Alt</key>+<key>Backspace</key>, or by terminating every client.
+
+If you're running `Xwayback` out of the build directory, wake sure `wayland-compositor` is on your PATH.
+
+If you're running wayback from an existing desktop session, allocate a new display number with the `-d :1` option.
+
 ## Discussion
 
 irc.libera.chat #wayback
