@@ -1,3 +1,7 @@
+# ARCHIVED AND MOVED TO FREEDESKTOP GITLAB
+
+This project has moved to: https://gitlab.freedesktop.org/wayback/wayback
+
 # wayback
 
 Wayback is an experimental X compatibility layer which allows for running
