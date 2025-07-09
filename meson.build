@@ -1,7 +1,10 @@
 project('wayback', 'c',
   version: '0.1',
   license: 'MIT',
-  meson_version: '>= 0.55')
+  meson_version: '>= 0.55',
+  default_options: [
+    'c_std=gnu11',
+  ])
 
 add_project_arguments('-DWLR_USE_UNSTABLE', language: 'c')
 
